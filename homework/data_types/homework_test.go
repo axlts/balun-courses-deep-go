@@ -16,10 +16,8 @@ func ToLittleEndianBitOps[T unsigned](be T) (le T) {
 		return 0
 	}
 
-	size := T(unsafe.Sizeof(be))
-
-	var i T
-	for ; i < size; i++ {
+	size := int(unsafe.Sizeof(be))
+	for i := 0; i < size; i++ {
 		le <<= 1 << 3
 		le |= be & 0xff
 		be >>= 1 << 3
@@ -32,14 +30,16 @@ func ToLittleEndianUnsafe[T unsigned](be T) (le T) {
 		return 0
 	}
 
-	size := unsafe.Sizeof(be)
+	size := int(unsafe.Sizeof(be))
+	beptr := unsafe.Pointer(&be)
+	leptr := unsafe.Add(unsafe.Pointer(&le), size-1)
 
-	buf := make([]byte, size)
-	for i := len(buf) - 1; i >= 0; i-- {
-		buf[i] = byte(be & 0xff)
-		be >>= 1 << 3
+	for i := 0; i < size; i++ {
+		*(*uint8)(leptr) = *(*uint8)(beptr)
+		beptr = unsafe.Add(beptr, 1)
+		leptr = unsafe.Add(leptr, -1)
 	}
-	return *(*T)(unsafe.Pointer(&buf[0]))
+	return
 }
 
 func TestSerializationProperties(t *testing.T) {
