@@ -10,16 +10,15 @@ import (
 // go test -v homework_test.go
 
 type CircularQueue struct {
-	values []int
+	values *array
 
-	front  int // first elem id.
-	back   int // last elem id + 1.
+	head   int // first elem index.
 	length int
 }
 
 func NewCircularQueue(size int) CircularQueue {
 	return CircularQueue{
-		values: make([]int, size),
+		values: alloc(size),
 	}
 }
 
@@ -28,8 +27,7 @@ func (q *CircularQueue) Push(value int) bool {
 		return false
 	}
 
-	q.values[q.back] = value
-	q.back = (q.back + 1) % len(q.values)
+	q.values.set((q.head+q.length)%q.values.len, value)
 
 	q.length++
 	return true
@@ -40,7 +38,7 @@ func (q *CircularQueue) Pop() bool {
 		return false
 	}
 
-	q.front = (q.front + 1) % len(q.values)
+	q.head = (q.head + 1) % q.values.len
 
 	q.length--
 	return true
@@ -50,19 +48,14 @@ func (q *CircularQueue) Front() int {
 	if q.Empty() {
 		return -1
 	}
-	return q.values[q.front]
+	return q.values.get(q.head)
 }
 
 func (q *CircularQueue) Back() int {
 	if q.Empty() {
 		return -1
 	}
-
-	idx := q.back - 1
-	if q.back == 0 {
-		idx = len(q.values) - 1
-	}
-	return q.values[idx]
+	return q.values.get((q.head + q.length - 1) % q.values.len)
 }
 
 func (q *CircularQueue) Empty() bool {
@@ -70,7 +63,7 @@ func (q *CircularQueue) Empty() bool {
 }
 
 func (q *CircularQueue) Full() bool {
-	return q.length == len(q.values)
+	return q.length == q.values.len
 }
 
 func TestCircularQueue(t *testing.T) {
@@ -89,7 +82,7 @@ func TestCircularQueue(t *testing.T) {
 	assert.True(t, queue.Push(3))
 	assert.False(t, queue.Push(4))
 
-	assert.True(t, reflect.DeepEqual([]int{1, 2, 3}, queue.values))
+	assert.True(t, reflect.DeepEqual([]int{1, 2, 3}, queue.values.slice()))
 
 	assert.False(t, queue.Empty())
 	assert.True(t, queue.Full())
@@ -102,7 +95,7 @@ func TestCircularQueue(t *testing.T) {
 	assert.False(t, queue.Full())
 	assert.True(t, queue.Push(4))
 
-	assert.True(t, reflect.DeepEqual([]int{4, 2, 3}, queue.values))
+	assert.True(t, reflect.DeepEqual([]int{4, 2, 3}, queue.values.slice()))
 
 	assert.Equal(t, 2, queue.Front())
 	assert.Equal(t, 4, queue.Back())
