@@ -10,36 +10,60 @@ import (
 // go test -v homework_test.go
 
 type CircularQueue struct {
-	values []int
-	// need to implement
+	values *array
+
+	head   int // first elem index.
+	length int
 }
 
 func NewCircularQueue(size int) CircularQueue {
-	return CircularQueue{} // need to implement
+	return CircularQueue{
+		values: alloc(size),
+	}
 }
 
 func (q *CircularQueue) Push(value int) bool {
-	return false // need to implement
+	if q.Full() {
+		return false
+	}
+
+	q.values.set((q.head+q.length)%q.values.len, value)
+
+	q.length++
+	return true
 }
 
 func (q *CircularQueue) Pop() bool {
-	return false // need to implement
+	if q.Empty() {
+		return false
+	}
+
+	q.head = (q.head + 1) % q.values.len
+
+	q.length--
+	return true
 }
 
 func (q *CircularQueue) Front() int {
-	return -1 // need to implement
+	if q.Empty() {
+		return -1
+	}
+	return q.values.get(q.head)
 }
 
 func (q *CircularQueue) Back() int {
-	return -1 // need to implement
+	if q.Empty() {
+		return -1
+	}
+	return q.values.get((q.head + q.length - 1) % q.values.len)
 }
 
 func (q *CircularQueue) Empty() bool {
-	return false // need to implement
+	return q.length == 0
 }
 
 func (q *CircularQueue) Full() bool {
-	return false // need to implement
+	return q.length == q.values.len
 }
 
 func TestCircularQueue(t *testing.T) {
@@ -58,7 +82,7 @@ func TestCircularQueue(t *testing.T) {
 	assert.True(t, queue.Push(3))
 	assert.False(t, queue.Push(4))
 
-	assert.True(t, reflect.DeepEqual([]int{1, 2, 3}, queue.values))
+	assert.True(t, reflect.DeepEqual([]int{1, 2, 3}, queue.values.slice()))
 
 	assert.False(t, queue.Empty())
 	assert.True(t, queue.Full())
@@ -71,7 +95,7 @@ func TestCircularQueue(t *testing.T) {
 	assert.False(t, queue.Full())
 	assert.True(t, queue.Push(4))
 
-	assert.True(t, reflect.DeepEqual([]int{4, 2, 3}, queue.values))
+	assert.True(t, reflect.DeepEqual([]int{4, 2, 3}, queue.values.slice()))
 
 	assert.Equal(t, 2, queue.Front())
 	assert.Equal(t, 4, queue.Back())
