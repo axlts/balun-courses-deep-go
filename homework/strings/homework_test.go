@@ -62,7 +62,7 @@ func (b *COWBuffer) Update(index int, value byte) bool {
 		b.refs = ptr(1)
 	}
 
-	*(*byte)(unsafe.Add(unsafe.Pointer(&b.data[0]), index*(1<<3))) = value
+	b.data[index] = value
 	return true
 }
 
