@@ -9,36 +9,151 @@ import (
 
 // go test -v homework_test.go
 
-type OrderedMap struct {
-	// need to implement
+type orderable interface {
+	numeric | ~string
 }
 
-func NewOrderedMap() OrderedMap {
-	return OrderedMap{} // need to implement
+type numeric interface {
+	signed | unsigned | ~float32 | ~float64
 }
 
-func (m *OrderedMap) Insert(key, value int) {
-	// need to implement
+type signed interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64
 }
 
-func (m *OrderedMap) Erase(key int) {
-	// need to implement
+type unsigned interface {
+	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64
 }
 
-func (m *OrderedMap) Contains(key int) bool {
-	return false // need to implement
+type node[K orderable, V any] struct {
+	key K
+	val V
+
+	left, right *node[K, V]
 }
 
-func (m *OrderedMap) Size() int {
-	return 0 // need to implement
+type OrderedMap[K orderable, V any] struct {
+	root *node[K, V]
+	size int
 }
 
-func (m *OrderedMap) ForEach(action func(int, int)) {
-	// need to implement
+func NewOrderedMap[K orderable, V any]() OrderedMap[K, V] {
+	return OrderedMap[K, V]{}
+}
+
+func (m *OrderedMap[K, V]) Insert(key K, val V) {
+	m.size++
+
+	if m.root == nil {
+		m.root = &node[K, V]{key: key, val: val}
+		return
+	}
+
+	prv, cur := (*node[K, V])(nil), m.root
+	for cur != nil {
+		if cur.key == key {
+			cur.val = val
+			return
+		}
+
+		prv = cur
+		if cur.key < key {
+			cur = cur.right
+		} else {
+			cur = cur.left
+		}
+	}
+
+	n := &node[K, V]{key: key, val: val}
+	if prv.key > key {
+		prv.left = n
+	} else {
+		prv.right = n
+	}
+}
+
+func (m *OrderedMap[K, V]) Erase(key K) {
+	if m.root == nil {
+		return
+	}
+
+	prv, cur := (*node[K, V])(nil), m.root
+	for cur != nil {
+		if cur.key == key {
+			break
+		}
+
+		prv = cur
+		if cur.key < key {
+			cur = cur.right
+		} else {
+			cur = cur.left
+		}
+	}
+	if cur == nil {
+		return
+	}
+
+	if cur.right == nil {
+		if prv == nil {
+			m.root = cur.left
+		} else {
+			if prv.left == cur {
+				prv.left = cur
+			} else {
+				prv.right = cur.left
+			}
+		}
+	} else {
+		prv = (*node[K, V])(nil)
+		lm := cur.right
+		for lm.left != nil {
+			prv, lm = lm, lm.left
+		}
+		if prv != nil {
+			prv.left = lm.right
+		} else {
+			cur.right = lm.right
+		}
+		cur.key, cur.val = lm.key, lm.val
+	}
+	m.size--
+}
+
+func (m *OrderedMap[K, V]) Contains(key K) bool {
+	cur := m.root
+	for cur != nil {
+		if cur.key == key {
+			return true
+		}
+		if cur.key > key {
+			cur = cur.left
+		} else {
+			cur = cur.right
+		}
+	}
+	return false
+}
+
+func (m *OrderedMap[K, V]) Size() int {
+	return m.size
+}
+
+func (m *OrderedMap[K, V]) ForEach(action func(K, V)) {
+	traverse(m.root, action)
+}
+
+func traverse[K orderable, V any](n *node[K, V], action func(K, V)) {
+	if n == nil {
+		return
+	}
+	traverse(n.left, action)
+	action(n.key, n.val)
+	traverse(n.right, action)
 }
 
 func TestCircularQueue(t *testing.T) {
-	data := NewOrderedMap()
+	data := NewOrderedMap[int, int]()
 	assert.Zero(t, data.Size())
 
 	data.Insert(10, 10)
