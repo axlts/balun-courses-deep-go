@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"reflect"
 	"testing"
 
@@ -9,35 +10,19 @@ import (
 
 // go test -v homework_test.go
 
-type orderable interface {
-	numeric | ~string
-}
-
-type numeric interface {
-	signed | unsigned | ~float32 | ~float64
-}
-
-type signed interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64
-}
-
-type unsigned interface {
-	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64
-}
-
-type node[K orderable, V any] struct {
+type node[K cmp.Ordered, V any] struct {
 	key K
 	val V
 
 	left, right *node[K, V]
 }
 
-type OrderedMap[K orderable, V any] struct {
+type OrderedMap[K cmp.Ordered, V any] struct {
 	root *node[K, V]
 	size int
 }
 
-func NewOrderedMap[K orderable, V any]() OrderedMap[K, V] {
+func NewOrderedMap[K cmp.Ordered, V any]() OrderedMap[K, V] {
 	return OrderedMap[K, V]{}
 }
 
@@ -143,7 +128,7 @@ func (m *OrderedMap[K, V]) ForEach(action func(K, V)) {
 	traverse(m.root, action)
 }
 
-func traverse[K orderable, V any](n *node[K, V], action func(K, V)) {
+func traverse[K cmp.Ordered, V any](n *node[K, V], action func(K, V)) {
 	if n == nil {
 		return
 	}
