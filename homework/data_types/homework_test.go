@@ -42,7 +42,7 @@ func ToLittleEndianUnsafe[T unsigned](be T) (le T) {
 	return
 }
 
-func TestSerializationProperties(t *testing.T) {
+func TestСonversion(t *testing.T) {
 	tests := map[string]struct {
 		number uint32
 		result uint32
