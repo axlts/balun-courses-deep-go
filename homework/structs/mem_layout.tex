@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{bytefield}
+
+\begin{document}
+
+    \begin{center}
+
+        \centering
+        \begin{bytefield}{41}
+            %\bitheader{0-40} \\
+            \bitbox[lt]{2}{} & \bitbox[t]{4}{} & \bitbox[t]{3}{} & \bitbox[tr]{32}{\textbf{Bits}} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{\textbf{Octets}} & \bitbox[]{3}{} &
+            \bitbox[]{4}{\textbf{8}} & \bitbox[]{4}{\textbf{7}} & \bitbox[]{4}{\textbf{6}} & \bitbox[]{4}{\textbf{5}} &
+            \bitbox[]{4}{\textbf{4}} & \bitbox[]{4}{\textbf{3}} & \bitbox[]{4}{\textbf{2}} & \bitbox[r]{4}{\textbf{1}} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{0-3} & \bitbox[]{3}{} & \bitbox{32}{X} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{4-7} & \bitbox[]{3}{} & \bitbox{32}{Y} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{8-11} & \bitbox[]{3}{} & \bitbox{32}{Z} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{12-15} & \bitbox[]{3}{} & \bitbox{32}{Gold} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{16} & \bitbox[]{3}{} & \bitbox{16}{Respect} & \bitbox{16}{Strength} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{17} & \bitbox[]{3}{} & \bitbox{16}{Experience} & \bitbox{16}{Level} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{18} & \bitbox[]{3}{} & \bitbox[lrt]{32}{Mana} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{19} & \bitbox[]{3}{} & \bitbox[lrb]{8}{} & \bitbox{4}{Spare} &
+            \bitbox{4}{House} & \bitbox{4}{Gun} & \bitbox{4}{Family} & \bitbox{8}{Type} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{20} & \bitbox[]{3}{} & \bitbox[lrt]{32}{Health} \\
+            \bitbox[l]{2}{} & \bitbox[]{4}{21} & \bitbox[]{3}{} & \bitbox[lrb]{8}{} & \bitbox{24}{Name Length} \\
+            \bitbox[lb]{2}{} & \bitbox[b]{4}{22-63} & \bitbox[b]{3}{} & \bitbox{32}{Name}
+        \end{bytefield}
+
+        \vspace{0.5cm}
+        \textbf{Figure 1: Memory Layout for GamePerson Structure}
+
+    \end{center}
+
+\end{document}
