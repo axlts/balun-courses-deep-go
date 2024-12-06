@@ -24,7 +24,7 @@ func Filter[T any](src []T, action func(T) bool) []T {
 		return nil
 	}
 
-	dst := make([]T, 0)
+	var dst []T
 	for i := range src {
 		if action(src[i]) {
 			dst = append(dst, src[i])
@@ -103,7 +103,7 @@ func TestFilter(t *testing.T) {
 			action: func(number int) bool {
 				return number == 1
 			},
-			result: []int{},
+			result: nil,
 		},
 		"even numbers": {
 			data: []int{1, 2, 3, 4, 5},
