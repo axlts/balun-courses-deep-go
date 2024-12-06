@@ -37,6 +37,13 @@ const (
 	maskHealth     = 0b00000011
 	maskType       = 0b00000011
 	maskNameLength = 0b00111111
+
+	shiftManaHigh   = 2
+	shiftManaLow    = 6
+	shiftHealthHigh = 2
+	shiftHealthLow  = 6
+	shiftRespect    = 4
+	shiftExperience = 4
 )
 
 func save[T any](ptr unsafe.Pointer, val T) {
@@ -82,8 +89,8 @@ func WithMana(mana int) func(*GamePerson) {
 		if mana < 0 {
 			mana = 0 // fix overflow
 		}
-		person.data[offsetMana] |= byte(mana >> 2)
-		person.data[offsetMana+1] |= byte(mana&maskMana) << 6
+		person.data[offsetMana] |= byte(mana >> shiftManaHigh)
+		person.data[offsetMana+1] |= byte(mana&maskMana) << shiftManaLow
 	}
 }
 
@@ -92,8 +99,8 @@ func WithHealth(health int) func(*GamePerson) {
 		if health < 0 {
 			health = 0 // fix overflow
 		}
-		person.data[offsetHealth] |= byte(health >> 2)
-		person.data[offsetHealth+1] |= byte(health&maskHealth) << 6
+		person.data[offsetHealth] |= byte(health >> shiftHealthHigh)
+		person.data[offsetHealth+1] |= byte(health&maskHealth) << shiftHealthLow
 	}
 }
 
@@ -102,7 +109,7 @@ func WithRespect(respect int) func(*GamePerson) {
 		if respect < 0 {
 			respect = 0 // fix overflow
 		}
-		person.data[offsetRespect] |= byte(respect) << 4
+		person.data[offsetRespect] |= byte(respect) << shiftRespect
 	}
 }
 
@@ -120,7 +127,7 @@ func WithExperience(experience int) func(*GamePerson) {
 		if experience < 0 {
 			experience = 0 // fix overflow
 		}
-		person.data[offsetExperience] |= byte(experience) << 4
+		person.data[offsetExperience] |= byte(experience) << shiftExperience
 	}
 }
 
@@ -200,15 +207,15 @@ func (p *GamePerson) Gold() int {
 }
 
 func (p *GamePerson) Mana() int {
-	return int(p.data[offsetMana])<<2 | int(p.data[offsetMana+1]>>6)
+	return int(p.data[offsetMana])<<shiftManaHigh | int(p.data[offsetMana+1]>>shiftManaLow)
 }
 
 func (p *GamePerson) Health() int {
-	return int(p.data[offsetHealth])<<2 | int(p.data[offsetHealth+1]>>6)
+	return int(p.data[offsetHealth])<<shiftHealthHigh | int(p.data[offsetHealth+1]>>shiftHealthLow)
 }
 
 func (p *GamePerson) Respect() int {
-	return int(p.data[offsetRespect] >> 4)
+	return int(p.data[offsetRespect] >> shiftRespect)
 }
 
 func (p *GamePerson) Strength() int {
@@ -216,7 +223,7 @@ func (p *GamePerson) Strength() int {
 }
 
 func (p *GamePerson) Experience() int {
-	return int(p.data[offsetExperience] >> 4)
+	return int(p.data[offsetExperience] >> shiftExperience)
 }
 
 func (p *GamePerson) Level() int {
