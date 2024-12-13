@@ -17,7 +17,7 @@ type MultiError struct {
 }
 
 func (e *MultiError) Error() string {
-	if e == nil || len(e.errs) == 0 {
+	if len(e.errs) == 0 {
 		return ""
 	}
 
@@ -40,9 +40,13 @@ func Append(err error, errs ...error) (m *MultiError) {
 
 	var ok bool
 	m, ok = err.(*MultiError)
-	if !ok {
-		panic("invalid error type")
+	if ok {
+		m.errs = append(m.errs, errs...)
+		return
 	}
+
+	m = &MultiError{errs: make([]error, 0, len(errs))}
+	m.errs = append(m.errs, err)
 	m.errs = append(m.errs, errs...)
 	return
 }
@@ -79,6 +83,15 @@ func TestMultiError(t *testing.T) {
 	err = Append(err, errors.New("error 2"))
 
 	expectedMessage := "2 errors occurred:\n\t* error 1\t* error 2\n"
+	assert.EqualError(t, err, expectedMessage)
+}
+
+func TestMultiError_DifferentBaseError(t *testing.T) {
+	baseErr := &testError{msg: "test"}
+	err := Append(baseErr, errors.New("error 1"))
+	err = Append(err, errors.New("error 2"))
+
+	expectedMessage := "3 errors occurred:\n\t* test\t* error 1\t* error 2\n"
 	assert.EqualError(t, err, expectedMessage)
 }
 
