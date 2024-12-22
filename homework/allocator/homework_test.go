@@ -26,19 +26,20 @@ func Defragment(mem []byte, ptrs []unsafe.Pointer, cls memcls) {
 
 	baseptr := uintptr(unsafe.Pointer(&mem[0]))
 
-	for i, j := 0, 0; i < len(ptrs); i++ {
-		memptr, ptr := unsafe.Pointer(&mem[j]), ptrs[i]
+	memoff := 0
+	for i := 0; i < len(ptrs); i++ {
+		memptr, ptr := unsafe.Pointer(&mem[memoff]), ptrs[i]
 
 		if off := int(uintptr(ptr) - baseptr); memptr != ptr {
-			copy(mem[j:j+cls], mem[off:off+cls])
+			copy(mem[memoff:memoff+cls], mem[off:off+cls])
 
 			ptrs[i] = memptr
-			for k := off; k < off+cls; k++ {
-				mem[k] = 0
+			for clridx := off; clridx < off+cls; clridx++ {
+				mem[clridx] = 0
 			}
 		}
 
-		j += cls
+		memoff += cls
 	}
 }
 
