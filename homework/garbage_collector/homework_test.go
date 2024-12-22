@@ -10,9 +10,41 @@ import (
 
 // go test -v homework_test.go
 
-func Trace(stacks [][]uintptr) []uintptr {
-	// need to implement
-	return nil
+func Trace(stacks [][]uintptr) (ptrs []uintptr) {
+	m := make(map[uintptr]struct{})
+
+	var stk []uintptr
+	for _, s := range stacks {
+		for _, ptr := range s {
+			if ptr != 0x00 && !seen(m, ptr) {
+				m[ptr] = struct{}{}
+				stk = append(stk, ptr)
+			}
+		}
+	}
+
+	for len(stk) > 0 {
+		ptr := stk[0]
+		ptrs = append(ptrs, ptr)
+
+		if d := deref(ptr); d != 0x00 && !seen(m, d) {
+			m[d] = struct{}{}
+			stk[0] = d
+		} else {
+			stk = stk[1:]
+		}
+	}
+
+	return ptrs
+}
+
+func seen(m map[uintptr]struct{}, ptr uintptr) bool {
+	_, ok := m[ptr]
+	return ok
+}
+
+func deref(ptr uintptr) uintptr {
+	return *(*uintptr)(unsafe.Pointer(ptr))
 }
 
 func TestTrace(t *testing.T) {
