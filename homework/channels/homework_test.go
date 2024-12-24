@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -11,24 +13,55 @@ import (
 // go test -v homework_test.go
 
 type WorkerPool struct {
-	// need to implement
+	in chan func()
+	wg sync.WaitGroup
+
+	stopped atomic.Bool
 }
 
-func NewWorkerPool(workersNumber int) *WorkerPool {
-	// need to implement
-	return &WorkerPool{}
+func NewWorkerPool(workersNumber, taskBuffer int) *WorkerPool {
+	wp := &WorkerPool{
+		in: make(chan func(), taskBuffer),
+	}
+
+	wp.wg.Add(workersNumber)
+	for i := 0; i < workersNumber; i++ {
+		go func() {
+			defer wp.wg.Done()
+			for task := range wp.in {
+				task()
+			}
+		}()
+	}
+
+	return wp
 }
 
-// Return an error if the pool is full
+// Return an error if the pool is full.
 func (wp *WorkerPool) AddTask(task func()) error {
-	// need to implement
-	return nil
+	if wp.stopped.Load() {
+		return errors.New("worker pool is stopped")
+	}
+	if task == nil {
+		return errors.New("task is nil")
+	}
+
+	select {
+	case wp.in <- task:
+		return nil
+	default:
+		return errors.New("task pool is full")
+	}
 }
 
 // Shutdown all workers and wait for all
-// tasks in the pool to complete
+// tasks in the pool to complete.
 func (wp *WorkerPool) Shutdown() {
-	// need to implement
+	if !wp.stopped.CompareAndSwap(false, true) {
+		return
+	}
+	close(wp.in)
+	wp.wg.Wait()
 }
 
 func TestWorkerPool(t *testing.T) {
@@ -38,7 +71,7 @@ func TestWorkerPool(t *testing.T) {
 		counter.Add(1)
 	}
 
-	pool := NewWorkerPool(2)
+	pool := NewWorkerPool(2, 3)
 	_ = pool.AddTask(task)
 	_ = pool.AddTask(task)
 	_ = pool.AddTask(task)
