@@ -10,36 +10,44 @@ import (
 )
 
 type RWMutex struct {
-	mtx        sync.Mutex
-	rcnt, wcnt atomic.Int64
+	inmtx, outmtx sync.Mutex
+	rcnt, wcnt    int
 }
 
 func (m *RWMutex) Lock() {
-	m.wcnt.Add(1)
-	m.mtx.Lock()
+	m.inmtx.Lock()
+	defer m.inmtx.Unlock()
+
+	m.wcnt++
+	m.outmtx.Lock()
 }
 
 func (m *RWMutex) Unlock() {
-	m.wcnt.Add(-1)
-	m.mtx.Unlock()
+	m.inmtx.Lock()
+	defer m.inmtx.Unlock()
+
+	m.wcnt--
+	m.outmtx.Unlock()
 }
 
 func (m *RWMutex) RLock() {
-	if m.rcnt.CompareAndSwap(0, 1) {
-		m.mtx.Lock()
-		return
-	} else if m.wcnt.Load() > 0 {
-		m.mtx.Lock()
+	m.inmtx.Lock()
+	defer m.inmtx.Unlock()
+
+	if m.rcnt == 0 || m.wcnt > 0 {
+		m.outmtx.Lock()
 	}
-	m.rcnt.Add(1)
+	m.rcnt++
 }
 
 func (m *RWMutex) RUnlock() {
-	if m.rcnt.CompareAndSwap(1, 0) {
-		m.mtx.Unlock()
-		return
+	m.inmtx.Lock()
+	defer m.inmtx.Unlock()
+
+	if m.rcnt == 0 {
+		m.outmtx.Unlock()
 	}
-	m.rcnt.Add(-1)
+	m.rcnt--
 }
 
 func TestRWMutexWithWriter(t *testing.T) {
