@@ -11,8 +11,8 @@ type heap struct {
 	index map[int]int // task id -> index in array.
 }
 
-func newPriorityHeap() *heap {
-	return &heap{
+func newPriorityHeap() heap {
+	return heap{
 		tasks: []Task{},
 		index: map[int]int{},
 	}
@@ -127,7 +127,7 @@ func hasLowerPriority(lhs, rhs Task) bool {
 }
 
 type Scheduler struct {
-	h *heap
+	h heap
 }
 
 func NewScheduler() Scheduler {
