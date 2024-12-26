@@ -15,8 +15,9 @@ import (
 type WorkerPool struct {
 	in chan func()
 	wg sync.WaitGroup
+	mu sync.Mutex
 
-	stopped atomic.Bool
+	stopped bool
 }
 
 func NewWorkerPool(workersNumber, taskBuffer int) *WorkerPool {
@@ -39,7 +40,10 @@ func NewWorkerPool(workersNumber, taskBuffer int) *WorkerPool {
 
 // Return an error if the pool is full.
 func (wp *WorkerPool) AddTask(task func()) error {
-	if wp.stopped.Load() {
+	wp.mu.Lock()
+	defer wp.mu.Unlock()
+
+	if wp.stopped {
 		return errors.New("worker pool is stopped")
 	}
 	if task == nil {
@@ -57,9 +61,13 @@ func (wp *WorkerPool) AddTask(task func()) error {
 // Shutdown all workers and wait for all
 // tasks in the pool to complete.
 func (wp *WorkerPool) Shutdown() {
-	if !wp.stopped.CompareAndSwap(false, true) {
+	wp.mu.Lock()
+	defer wp.mu.Unlock()
+
+	if wp.stopped {
 		return
 	}
+	wp.stopped = true
 	close(wp.in)
 	wp.wg.Wait()
 }
