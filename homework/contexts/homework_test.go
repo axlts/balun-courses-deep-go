@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -11,21 +12,50 @@ import (
 )
 
 type Group struct {
-	// need to implement
+	ctx    context.Context
+	cancel context.CancelCauseFunc
+	wg     sync.WaitGroup
+	sem    chan struct{}
 }
 
 func NewErrGroup(ctx context.Context) (*Group, context.Context) {
-	// need to implement
-	return &Group{}, ctx
+	ctx, cancel := context.WithCancelCause(ctx)
+	return &Group{
+		ctx:    ctx,
+		cancel: cancel,
+	}, ctx
 }
 
 func (g *Group) Go(action func() error) {
-	// need to implement
+	if g.sem != nil {
+		g.sem <- struct{}{}
+	}
+
+	g.wg.Add(1)
+	go func() {
+		defer g.wg.Done()
+		defer func() {
+			if g.sem != nil {
+				<-g.sem
+			}
+		}()
+
+		if err := action(); err != nil {
+			g.cancel(err)
+		}
+	}()
 }
 
 func (g *Group) Wait() error {
-	// need to implement
-	return nil
+	g.wg.Wait()
+	return g.ctx.Err()
+}
+
+func (g *Group) SetLimit(n int) {
+	if cap(g.sem) > 0 {
+		panic("can not set limit twice")
+	}
+	g.sem = make(chan struct{}, n)
 }
 
 func TestErrGroupWithoutError(t *testing.T) {
